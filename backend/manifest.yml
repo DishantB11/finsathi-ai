@@ -1,0 +1,11 @@
+applications:
+  - name: finsathi-ai-backend
+    memory: 512M
+    instances: 1
+    buildpack: python_buildpack
+    command: pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port $PORT
+    env:
+      IBM_API_KEY: YwK84zc1QRP9C7rXc3p07l6zIeqMhIUALWbjOKCkKOkz
+      IBM_PROJECT_ID: 73704774-366c-4a5a-a4c3-0b13e7319f60
+      IBM_URL: https://au-syd.ml.cloud.ibm.com
+      GRANITE_MODEL_ID: ibm/granite-13b-chat-v2
