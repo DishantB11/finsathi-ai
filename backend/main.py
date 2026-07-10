@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from ibm_watsonx_ai import APIClient, Credentials
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
-from rag_pipeline import retrieve_context, build_vector_store, get_vector_store
+from rag_pipeline import retrieve_context
 from config import (
     IBM_API_KEY,
     IBM_PROJECT_ID,
@@ -37,11 +37,7 @@ async def lifespan(app: FastAPI):
     global model
     print("[FinSathi] Starting up...")
 
-    if not os.path.exists("./chroma_db"):
-        print("[FinSathi] Building knowledge base for the first time...")
-        build_vector_store()
-    else:
-        print("[FinSathi] Knowledge base found, skipping rebuild.")
+    print("[FinSathi] Knowledge base loaded (keyword search, no ML model).")
 
     print("[FinSathi] Connecting to IBM Granite...")
     credentials = Credentials(url=IBM_URL, api_key=IBM_API_KEY)
@@ -142,14 +138,23 @@ def build_prompt(question: str, context: str, language: str) -> str:
 
 # -- Core Granite call (blocking, runs in thread pool) ------------------------
 def _call_granite(question: str, language: str) -> dict:
+    from knowledge_base import FINSATHI_KNOWLEDGE_BASE as KB
     context = retrieve_context(question, top_k=3)
     prompt = build_prompt(question, context, language)
     result = model.generate_text(prompt=prompt)
     answer = result.strip() if isinstance(result, str) else str(result)
 
-    collection = get_vector_store()
-    results = collection.query(query_texts=[question], n_results=3)
-    sources = [meta["topic"] for meta in results["metadatas"][0]]
+    # Extract source topics from keyword search results
+    query_lower = question.lower()
+    query_words = set(query_lower.split())
+    scored = []
+    for doc in KB:
+        score = sum(1 for w in query_words if w in doc["content"].lower() or w in doc["topic"].lower())
+        if any(w in doc["topic"].lower() for w in query_words):
+            score += 3
+        scored.append((score, doc["topic"]))
+    scored.sort(reverse=True)
+    sources = list(dict.fromkeys([t for _, t in scored[:3]]))  # deduplicated top-3
     return {"answer": answer, "sources": sources}
 
 
