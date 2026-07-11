@@ -4,7 +4,12 @@
 import hashlib
 import os
 
-_RAW_IBM_API_KEY = os.environ.get("IBM_API_KEY", "")
+_API_KEY_SOURCE = "IBM_API_KEY"
+_RAW_IBM_API_KEY = os.environ.get("FINSATHI_IBM_API_KEY", "")
+if _RAW_IBM_API_KEY:
+    _API_KEY_SOURCE = "FINSATHI_IBM_API_KEY"
+else:
+    _RAW_IBM_API_KEY = os.environ.get("IBM_API_KEY", "")
 IBM_API_KEY = _RAW_IBM_API_KEY.strip()
 IBM_PROJECT_ID = os.environ.get("IBM_PROJECT_ID", "").strip()
 IBM_URL = os.environ.get("IBM_URL", "https://us-south.ml.cloud.ibm.com").strip()
@@ -42,6 +47,7 @@ def missing_ibm_settings() -> list[str]:
 def ibm_api_key_diagnostics() -> dict:
     stripped = IBM_API_KEY
     return {
+        "source": _API_KEY_SOURCE,
         "present": bool(_RAW_IBM_API_KEY),
         "raw_length": len(_RAW_IBM_API_KEY),
         "stripped_length": len(stripped),
