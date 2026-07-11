@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from ibm_watsonx_ai import APIClient, Credentials
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
-from rag_pipeline import retrieve_context
+from rag_pipeline import retrieve_context, get_sources
 from config import (
     IBM_API_KEY,
     IBM_PROJECT_ID,
@@ -138,23 +138,11 @@ def build_prompt(question: str, context: str, language: str) -> str:
 
 # -- Core Granite call (blocking, runs in thread pool) ------------------------
 def _call_granite(question: str, language: str) -> dict:
-    from knowledge_base import FINSATHI_KNOWLEDGE_BASE as KB
     context = retrieve_context(question, top_k=3)
     prompt = build_prompt(question, context, language)
     result = model.generate_text(prompt=prompt)
     answer = result.strip() if isinstance(result, str) else str(result)
-
-    # Extract source topics from keyword search results
-    query_lower = question.lower()
-    query_words = set(query_lower.split())
-    scored = []
-    for doc in KB:
-        score = sum(1 for w in query_words if w in doc["content"].lower() or w in doc["topic"].lower())
-        if any(w in doc["topic"].lower() for w in query_words):
-            score += 3
-        scored.append((score, doc["topic"]))
-    scored.sort(reverse=True)
-    sources = list(dict.fromkeys([t for _, t in scored[:3]]))  # deduplicated top-3
+    sources = get_sources(question, top_k=3)
     return {"answer": answer, "sources": sources}
 
 
