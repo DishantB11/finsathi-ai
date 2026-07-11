@@ -9,8 +9,6 @@ services:
     envVars:
       - key: FINSATHI_IBM_API_KEY
         sync: false
-      - key: IBM_API_KEY
-        sync: false
       - key: IBM_PROJECT_ID
         sync: false
       - key: IBM_URL

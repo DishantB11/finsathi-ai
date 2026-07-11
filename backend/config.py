@@ -4,12 +4,8 @@
 import hashlib
 import os
 
-_API_KEY_SOURCE = "IBM_API_KEY"
+_API_KEY_SOURCE = "FINSATHI_IBM_API_KEY"
 _RAW_IBM_API_KEY = os.environ.get("FINSATHI_IBM_API_KEY", "")
-if _RAW_IBM_API_KEY:
-    _API_KEY_SOURCE = "FINSATHI_IBM_API_KEY"
-else:
-    _RAW_IBM_API_KEY = os.environ.get("IBM_API_KEY", "")
 IBM_API_KEY = _RAW_IBM_API_KEY.strip()
 IBM_PROJECT_ID = os.environ.get("IBM_PROJECT_ID", "").strip()
 IBM_URL = os.environ.get("IBM_URL", "https://us-south.ml.cloud.ibm.com").strip()
@@ -36,7 +32,7 @@ TEMPERATURE = 0.7
 def missing_ibm_settings() -> list[str]:
     missing = []
     if not IBM_API_KEY:
-        missing.append("IBM_API_KEY")
+        missing.append("FINSATHI_IBM_API_KEY")
     if not IBM_PROJECT_ID:
         missing.append("IBM_PROJECT_ID")
     if not IBM_URL:
