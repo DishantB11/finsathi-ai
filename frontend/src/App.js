@@ -163,6 +163,10 @@ const S = {
     lineHeight: 1.65,
     border: role === "user" ? "none" : "1px solid #d0d7de",
   }),
+  messageText: {
+    whiteSpace: "pre-wrap",
+    overflowWrap: "anywhere",
+  },
   sources: {
     marginTop: 8,
     paddingTop: 8,
@@ -386,7 +390,7 @@ export default function App() {
                     {msg.role === "user" ? "U" : "AI"}
                   </div>
                   <div style={S.bubble(msg.role)}>
-                    {msg.text}
+                    <div style={S.messageText}>{msg.text}</div>
                     {msg.sources && msg.sources.length > 0 && (
                       <div style={S.sources}>
                         <span>Sources:</span>
