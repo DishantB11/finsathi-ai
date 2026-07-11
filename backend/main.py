@@ -40,18 +40,25 @@ async def lifespan(app: FastAPI):
     print("[FinSathi] Knowledge base loaded (keyword search, no ML model).")
 
     print("[FinSathi] Connecting to IBM Granite...")
-    credentials = Credentials(url=IBM_URL, api_key=IBM_API_KEY)
-    client = APIClient(credentials=credentials, project_id=IBM_PROJECT_ID)
-    model = ModelInference(
-        model_id=GRANITE_MODEL_ID,
-        api_client=client,
-        params={
-            GenParams.MAX_NEW_TOKENS: MAX_NEW_TOKENS,
-            GenParams.TEMPERATURE: TEMPERATURE,
-            GenParams.STOP_SEQUENCES: ["Human:", "User:"],
-        },
-    )
-    print("[FinSathi] Ready! Model: " + GRANITE_MODEL_ID)
+    print("[FinSathi] IBM_API_KEY set: " + ("YES" if IBM_API_KEY and IBM_API_KEY != "your_ibm_api_key_here" else "NO - CHECK ENV VARS"))
+    print("[FinSathi] IBM_PROJECT_ID: " + IBM_PROJECT_ID[:8] + "...")
+    print("[FinSathi] IBM_URL: " + IBM_URL)
+    try:
+        credentials = Credentials(url=IBM_URL, api_key=IBM_API_KEY)
+        client = APIClient(credentials=credentials, project_id=IBM_PROJECT_ID)
+        model = ModelInference(
+            model_id=GRANITE_MODEL_ID,
+            api_client=client,
+            params={
+                GenParams.MAX_NEW_TOKENS: MAX_NEW_TOKENS,
+                GenParams.TEMPERATURE: TEMPERATURE,
+                GenParams.STOP_SEQUENCES: ["Human:", "User:"],
+            },
+        )
+        print("[FinSathi] Ready! Model: " + GRANITE_MODEL_ID)
+    except Exception as e:
+        print("[FinSathi] WARNING: IBM Granite failed to initialize: " + str(e))
+        print("[FinSathi] Server will start but /chat will return errors until credentials are fixed.")
     yield
     executor.shutdown(wait=False)
     print("[FinSathi] Shutting down.")
