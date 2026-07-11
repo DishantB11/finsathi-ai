@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+import requests
 from ibm_watsonx_ai import APIClient, Credentials
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
@@ -199,6 +200,41 @@ def health_check():
         "project_id": IBM_PROJECT_ID[:8] + "..." if IBM_PROJECT_ID else "NOT SET",
         "url": IBM_URL,
         "missing_env_vars": missing,
+    }
+
+
+@app.get("/debug/iam")
+def debug_iam():
+    """Check IAM token exchange from the deployed environment without exposing secrets."""
+    if not IBM_API_KEY:
+        raise HTTPException(status_code=400, detail="IBM_API_KEY is not configured.")
+
+    response = requests.post(
+        "https://iam.cloud.ibm.com/identity/token",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data={
+            "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+            "apikey": IBM_API_KEY,
+        },
+        timeout=20,
+    )
+
+    if response.ok:
+        payload = response.json()
+        return {
+            "ok": True,
+            "status_code": response.status_code,
+            "token_type": payload.get("token_type"),
+            "expires_in": payload.get("expires_in"),
+        }
+
+    return {
+        "ok": False,
+        "status_code": response.status_code,
+        "body": response.text[:500],
     }
 
 
