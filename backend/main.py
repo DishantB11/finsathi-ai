@@ -23,17 +23,26 @@ from config import (
     GRANITE_MODEL_ID,
     MAX_NEW_TOKENS,
     TEMPERATURE,
+    missing_ibm_settings,
 )
 
 # -- Global state --------------------------------------------------------------
 model = None
 jobs: dict = {}
 executor = ThreadPoolExecutor(max_workers=4)
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+STATIC_INDEX = os.path.join(STATIC_DIR, "index.html")
+STATIC_ASSETS_DIR = os.path.join(STATIC_DIR, "static")
 
 
 # -- Lazy Granite loader -------------------------------------------------------
 def _load_model():
     """Create a fresh ModelInference client. Called per-request if model is None."""
+    missing = missing_ibm_settings()
+    if missing:
+        raise RuntimeError(
+            "Missing required environment variables: " + ", ".join(missing)
+        )
     credentials = Credentials(url=IBM_URL, api_key=IBM_API_KEY)
     client = APIClient(credentials=credentials, project_id=IBM_PROJECT_ID)
     return ModelInference(
@@ -53,7 +62,7 @@ async def lifespan(app: FastAPI):
     print("[FinSathi] Starting up...")
     print("[FinSathi] Knowledge base loaded (keyword search, no ML model).")
     print("[FinSathi] IBM_API_KEY set: " + ("YES" if IBM_API_KEY and len(IBM_API_KEY) > 20 else "NO"))
-    print("[FinSathi] IBM_PROJECT_ID: " + IBM_PROJECT_ID[:8] + "...")
+    print("[FinSathi] IBM_PROJECT_ID: " + (IBM_PROJECT_ID[:8] + "..." if IBM_PROJECT_ID else "NOT SET"))
     print("[FinSathi] IBM_URL: " + IBM_URL)
     print("[FinSathi] Model will connect on first request (lazy init).")
     yield
@@ -168,6 +177,8 @@ def _run_job(job_id: str, question: str, language: str):
 # -- Routes --------------------------------------------------------------------
 @app.get("/")
 def root():
+    if os.path.exists(STATIC_INDEX):
+        return FileResponse(STATIC_INDEX)
     return {
         "name": "FinSathi AI",
         "status": "running",
@@ -177,13 +188,15 @@ def root():
 
 @app.get("/health")
 def health_check():
+    missing = missing_ibm_settings()
     return {
         "status": "healthy",
         "model": GRANITE_MODEL_ID,
         "model_loaded": model is not None,
-        "api_key_set": bool(IBM_API_KEY and len(IBM_API_KEY) > 20),
+        "api_key_set": bool(IBM_API_KEY),
         "project_id": IBM_PROJECT_ID[:8] + "..." if IBM_PROJECT_ID else "NOT SET",
         "url": IBM_URL,
+        "missing_env_vars": missing,
     }
 
 
@@ -219,20 +232,17 @@ def chat(request: ChatRequest):
 
 @app.post("/rebuild-knowledge-base")
 def rebuild_kb():
-    try:
-        build_vector_store()
-        return {"status": "success", "message": "Knowledge base rebuilt successfully."}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    raise HTTPException(
+        status_code=501,
+        detail="Knowledge base rebuild is not supported in this deployment.",
+    )
 
 
 # -- Serve React build (must be LAST — catches all remaining routes) -----------
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-if os.path.exists(STATIC_DIR):
-    app.mount("/static", StaticFiles(directory=os.path.join(STATIC_DIR, "static")), name="assets")
+if os.path.exists(STATIC_INDEX) and os.path.isdir(STATIC_ASSETS_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_ASSETS_DIR), name="assets")
 
     @app.get("/{full_path:path}")
     def serve_react(full_path: str):
         """Serve React app for all non-API routes (client-side routing support)."""
-        index = os.path.join(STATIC_DIR, "index.html")
-        return FileResponse(index)
+        return FileResponse(STATIC_INDEX)

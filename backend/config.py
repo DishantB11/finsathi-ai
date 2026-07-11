@@ -1,15 +1,17 @@
 # FinSathi AI - Configuration
-# In production (Docker/Code Engine), values come from environment variables.
-# In local dev, values are set directly here.
+# In production, values should come from environment variables.
 
 import os
 
-IBM_API_KEY    = os.environ.get("IBM_API_KEY",    "YwK84zc1QRP9C7rXc3p07l6zIeqMhIUALWbjOKCkKOkz")
-IBM_PROJECT_ID = os.environ.get("IBM_PROJECT_ID", "c7932346-d14d-43fc-8274-39808c17a8bc")
-IBM_URL        = os.environ.get("IBM_URL",        "https://us-south.ml.cloud.ibm.com")
+IBM_API_KEY = os.environ.get("IBM_API_KEY", "").strip()
+IBM_PROJECT_ID = os.environ.get("IBM_PROJECT_ID", "").strip()
+IBM_URL = os.environ.get("IBM_URL", "https://us-south.ml.cloud.ibm.com").strip()
 
-# granite-4-h-small — latest IBM Granite model available in this environment
-GRANITE_MODEL_ID = "ibm/granite-4-h-small"
+# granite-4-h-small is a lightweight default for this app.
+GRANITE_MODEL_ID = (
+    os.environ.get("GRANITE_MODEL_ID", "ibm/granite-4-h-small").strip()
+    or "ibm/granite-4-h-small"
+)
 
 # ChromaDB settings
 CHROMA_PERSIST_DIR = "./chroma_db"
@@ -22,3 +24,14 @@ EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 TOP_K_RESULTS = 3
 MAX_NEW_TOKENS = 512
 TEMPERATURE = 0.7
+
+
+def missing_ibm_settings() -> list[str]:
+    missing = []
+    if not IBM_API_KEY:
+        missing.append("IBM_API_KEY")
+    if not IBM_PROJECT_ID:
+        missing.append("IBM_PROJECT_ID")
+    if not IBM_URL:
+        missing.append("IBM_URL")
+    return missing

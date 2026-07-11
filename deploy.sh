@@ -1,6 +1,6 @@
 # FinSathi AI - IBM Cloud Code Engine Deployment
 # Run each command in order from: C:\Users\Dishu\Downloads\bob_html\FinSathi-AI\
-# (The terminal where ibmcloud works)
+# Replace placeholder values before running this script.
 
 # STEP 1: Target region
 ibmcloud target -r us-south -g Default
@@ -23,7 +23,7 @@ ibmcloud ce secret create --name icr-secret \
   --format registry \
   --server us.icr.io \
   --username iamapikey \
-  --password YwK84zc1QRP9C7rXc3p07l6zIeqMhIUALWbjOKCkKOkz
+  --password YOUR_IBM_CLOUD_API_KEY
 
 # STEP 6: Submit the build run (uploads source + builds on IBM Cloud)
 ibmcloud ce buildrun submit --build finsathi-build --name finsathi-build-run-1
@@ -39,8 +39,8 @@ ibmcloud ce application create \
   --port 8000 \
   --cpu 1 \
   --memory 4G \
-  --env IBM_API_KEY=YwK84zc1QRP9C7rXc3p07l6zIeqMhIUALWbjOKCkKOkz \
-  --env IBM_PROJECT_ID=c7932346-d14d-43fc-8274-39808c17a8bc \
+  --env IBM_API_KEY=YOUR_IBM_API_KEY \
+  --env IBM_PROJECT_ID=YOUR_IBM_PROJECT_ID \
   --env IBM_URL=https://us-south.ml.cloud.ibm.com \
   --min-scale 1 \
   --max-scale 2
