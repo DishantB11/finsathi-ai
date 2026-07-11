@@ -174,7 +174,14 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "model": GRANITE_MODEL_ID}
+    return {
+        "status": "healthy",
+        "model": GRANITE_MODEL_ID,
+        "model_loaded": model is not None,
+        "api_key_set": bool(IBM_API_KEY and len(IBM_API_KEY) > 20),
+        "project_id": IBM_PROJECT_ID[:8] + "..." if IBM_PROJECT_ID else "NOT SET",
+        "url": IBM_URL,
+    }
 
 
 @app.post("/chat/async", response_model=JobResponse)
