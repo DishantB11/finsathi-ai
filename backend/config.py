@@ -1,6 +1,7 @@
 # FinSathi AI - Configuration
 # In production, values should come from environment variables.
 
+import hashlib
 import os
 
 _RAW_IBM_API_KEY = os.environ.get("IBM_API_KEY", "")
@@ -50,4 +51,9 @@ def ibm_api_key_diagnostics() -> dict:
         "contains_space": " " in stripped,
         "contains_tab": "\t" in _RAW_IBM_API_KEY,
         "contains_newline": "\n" in _RAW_IBM_API_KEY or "\r" in _RAW_IBM_API_KEY,
+        "sha256_prefix": (
+            hashlib.sha256(stripped.encode("utf-8")).hexdigest()[:12]
+            if stripped
+            else ""
+        ),
     }
