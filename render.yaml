@@ -7,6 +7,8 @@ services:
     dockerContext: .
     healthCheckPath: /health
     envVars:
+      - key: FINSATHI_IBM_API_KEY
+        sync: false
       - key: IBM_API_KEY
         sync: false
       - key: IBM_PROJECT_ID
