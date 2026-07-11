@@ -23,6 +23,7 @@ from config import (
     GRANITE_MODEL_ID,
     MAX_NEW_TOKENS,
     TEMPERATURE,
+    ibm_api_key_diagnostics,
     missing_ibm_settings,
 )
 
@@ -194,6 +195,7 @@ def health_check():
         "model": GRANITE_MODEL_ID,
         "model_loaded": model is not None,
         "api_key_set": bool(IBM_API_KEY),
+        "api_key_diagnostics": ibm_api_key_diagnostics(),
         "project_id": IBM_PROJECT_ID[:8] + "..." if IBM_PROJECT_ID else "NOT SET",
         "url": IBM_URL,
         "missing_env_vars": missing,

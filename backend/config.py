@@ -3,7 +3,8 @@
 
 import os
 
-IBM_API_KEY = os.environ.get("IBM_API_KEY", "").strip()
+_RAW_IBM_API_KEY = os.environ.get("IBM_API_KEY", "")
+IBM_API_KEY = _RAW_IBM_API_KEY.strip()
 IBM_PROJECT_ID = os.environ.get("IBM_PROJECT_ID", "").strip()
 IBM_URL = os.environ.get("IBM_URL", "https://us-south.ml.cloud.ibm.com").strip()
 
@@ -35,3 +36,18 @@ def missing_ibm_settings() -> list[str]:
     if not IBM_URL:
         missing.append("IBM_URL")
     return missing
+
+
+def ibm_api_key_diagnostics() -> dict:
+    stripped = IBM_API_KEY
+    return {
+        "present": bool(_RAW_IBM_API_KEY),
+        "raw_length": len(_RAW_IBM_API_KEY),
+        "stripped_length": len(stripped),
+        "changed_by_strip": _RAW_IBM_API_KEY != stripped,
+        "starts_with_quote": stripped.startswith(("'", '"')),
+        "ends_with_quote": stripped.endswith(("'", '"')),
+        "contains_space": " " in stripped,
+        "contains_tab": "\t" in _RAW_IBM_API_KEY,
+        "contains_newline": "\n" in _RAW_IBM_API_KEY or "\r" in _RAW_IBM_API_KEY,
+    }
